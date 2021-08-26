@@ -109,15 +109,15 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	// y: 1.2007012737959566
 	// z: -0.28940390033229746
 
-	// camera.position.x = -1.5427103804282107;
-	// camera.position.y = 1.2007012737959566 - 0.05;
-	// camera.position.z = -0.28940390033229746 - 0.008;
+	camera.position.x = -1.5427103804282107;
+	camera.position.y = 1.2007012737959566 + 0.03;
+	camera.position.z = -0.28940390033229746 - 0.008;
 
-	// // camera.position.x = 1;
-	// // camera.position.y = 1;
-	// // camera.position.z = 0.1;
+	// camera.position.x = 1;
+	// camera.position.y = 1;
+	// camera.position.z = 0.1;
 
-	// camera.lookAt(hMonitor.position);
+	camera.lookAt(hMonitor.position);
 
 	console.log(camera.rotation);
 
@@ -158,7 +158,7 @@ window.addEventListener('resize', () => {
 // // Handle user input
 let nextPosition = 0;
 window.addEventListener('dblclick', () => {
-	// moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+	moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 	// camera.lookAt(shelfV.position);
 	// camera.rotation.y = Math.PI / 2;
 
@@ -213,14 +213,9 @@ const benchP = MATTER.Bodies.rectangle(
 	{ isStatic: true }
 );
 
-const chairP = MATTER.Bodies.circle(
-	convertFromBlenderToMatterUnits(1.18 - 0.1),
-	convertFromBlenderToMatterUnits(1.77 - 0.2),
-	80,
-	{
-		isStatic: true
-	}
-);
+const chairP = MATTER.Bodies.circle(convertFromBlenderToMatterUnits(1.14), convertFromBlenderToMatterUnits(1.51), 60, {
+	isStatic: true
+});
 console.log(shelfP.position);
 
 const createRandomVector = () => {

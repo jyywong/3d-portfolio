@@ -11,7 +11,7 @@ export const centerPosition = {
 
 export const zoomOutMonitor = {
 	newX: -1.4427103804282106,
-	newY: 1.1507012737959565,
+	newY: 1.1507012737959565 + 0.03,
 	newZ: -0.29740390033229747,
 	newRX: -2.958725860248746,
 	newRY: 1.5032790968342025,
@@ -45,7 +45,7 @@ export const displayShelf = {
 	newRZ: 0
 };
 
-export const cameraPositions = [ zoomOutMonitor, topShelf, secondShelf, centerPosition, displayShelf, centerPosition ];
+export const cameraPositions = [ zoomOutMonitor, topShelf, secondShelf, displayShelf, centerPosition ];
 
 export const moveCameraToNextPosition = (camera, newPosition) => {
 	const { x, y, z } = camera.position;

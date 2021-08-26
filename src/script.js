@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as TWEEN from '@tweenjs/tween.js';
+import * as MATTER from 'matter-js';
 
 import {
 	moveCameraToNextPosition,
@@ -14,7 +15,6 @@ import {
 	scaleTextbookOut,
 	scaleTextbookIn
 } from './helperFunctions';
-import { Vector2, Vector3 } from 'three';
 
 const canvas = document.querySelector('.webgl');
 
@@ -38,7 +38,7 @@ const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
 
 // Textures
-const bakedTexture = textureLoader.load('blender/baked2.jpg');
+const bakedTexture = textureLoader.load('blender/baked2roomba.jpg');
 bakedTexture.flipY = false;
 
 // Materials
@@ -85,6 +85,8 @@ let globe = null;
 let textbooks = null;
 let textbooksAnimating = false;
 
+let roomba = null;
+
 gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
 		// console.log(child);
@@ -98,7 +100,8 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	displayBenchBoxes = gltf.scene.children.find((child) => child.name === 'displayBenchBoxes');
 	globe = gltf.scene.children.find((child) => child.name === 'globe').children;
 	textbooks = gltf.scene.children.find((child) => child.name === 'textbooks');
-	console.log(textbooks);
+	roomba = gltf.scene.children.find((child) => child.name === 'roomba');
+	console.log(roomba);
 	// pointLight.position.set(lamp.position);
 
 	// Position to look at hMonitor
@@ -173,9 +176,106 @@ window.addEventListener('mousemove', (event) => {
 	mouse.y = -(event.clientY / sizes.height - 0.5) * 2;
 });
 
+// --------------------------------------------
+// Physics world
+const engine = MATTER.Engine.create();
+engine.gravity.y = 0;
+const render = MATTER.Render.create({
+	element: document.body,
+	engine: engine,
+	options: {
+		width: 800,
+		height: 800
+	}
+});
+const convertFromBlenderToMatterUnits = (unit) => {
+	const mUnit = unit / 4 * 800;
+	return mUnit;
+};
+// Walls
+const northWall = MATTER.Bodies.rectangle(400, 5, 780, 10, { isStatic: true });
+const eastWall = MATTER.Bodies.rectangle(795, 400, 10, 780, { isStatic: true });
+const southWall = MATTER.Bodies.rectangle(400, 795, 780, 10, { isStatic: true });
+const westWall = MATTER.Bodies.rectangle(5, 400, 10, 780, { isStatic: true });
+// Furniture
+const shelfP = MATTER.Bodies.rectangle(
+	convertFromBlenderToMatterUnits(0.36),
+	convertFromBlenderToMatterUnits(3.5),
+	convertFromBlenderToMatterUnits(1.14 - 0.4),
+	convertFromBlenderToMatterUnits(1.99),
+	{ isStatic: true }
+);
+const benchP = MATTER.Bodies.rectangle(
+	convertFromBlenderToMatterUnits(2.82),
+	convertFromBlenderToMatterUnits(0.35),
+	convertFromBlenderToMatterUnits(2.37 - 0.2),
+	convertFromBlenderToMatterUnits(1.04 - 0.2),
+	{ isStatic: true }
+);
+
+const chairP = MATTER.Bodies.circle(
+	convertFromBlenderToMatterUnits(1.18 - 0.1),
+	convertFromBlenderToMatterUnits(1.77 - 0.2),
+	80,
+	{
+		isStatic: true
+	}
+);
+console.log(shelfP.position);
+
+const createRandomVector = () => {
+	const randVector = MATTER.Vector.create(Math.random() - 0.5, Math.random() - 0.5);
+	const normVector = MATTER.Vector.normalise(randVector);
+	const speed = 2;
+	normVector.x *= speed;
+	normVector.y *= speed;
+	return normVector;
+};
+const rotateVector = (currentVector) => {
+	const randomAngle = Math.random() * 0.5 + 3;
+	return MATTER.Vector.rotate(currentVector, Math.PI / randomAngle);
+};
+let currentVector = createRandomVector();
+
+const roombaP = MATTER.Bodies.circle(400, 400, 30);
+roombaP.friction = 0;
+// MATTER.Body.applyForce(roombaP, { x: 390, y: 400 }, { x: 0.5, y: 0.1 });
+
+MATTER.Composite.add(engine.world, [ roombaP, northWall, eastWall, southWall, westWall, shelfP, benchP, chairP ]);
+MATTER.Render.run(render);
+
+// End phyiscs world
+
+let oldElapsedTime = 0;
+
 const clock = new THREE.Clock();
 const tick = () => {
 	const elapsedTime = clock.getElapsedTime();
+	const deltaTime = elapsedTime - oldElapsedTime;
+	oldElapsedTime = elapsedTime;
+	// console.log(deltaTime);
+
+	//  --------------------------------------------
+	// Physics Calculations
+
+	if (
+		MATTER.SAT.collides(roombaP, northWall).collided ||
+		MATTER.SAT.collides(roombaP, eastWall).collided ||
+		MATTER.SAT.collides(roombaP, southWall).collided ||
+		MATTER.SAT.collides(roombaP, westWall).collided ||
+		MATTER.SAT.collides(roombaP, shelfP).collided ||
+		MATTER.SAT.collides(roombaP, benchP).collided ||
+		MATTER.SAT.collides(roombaP, chairP).collided
+	) {
+		currentVector = rotateVector(currentVector);
+	}
+
+	MATTER.Body.setVelocity(roombaP, currentVector);
+
+	MATTER.Engine.update(engine);
+	// End Physics Calculations
+	//  --------------------------------------------
+
 	if (displayBenchBoxes !== null) {
 		// Raycaster
 		raycaster.setFromCamera(mouse, camera);
@@ -203,15 +303,18 @@ const tick = () => {
 
 			currentIntersect = null;
 		}
-		// console.log(intersects);
 	}
 	TWEEN.update();
-
-	// console.log(currentIntersect);
 
 	if ((control.enabled = true)) {
 		control.update();
 	}
+
+	if (roomba !== null) {
+		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;
+		roomba.position.z = (roombaP.position.y / 800 - 0.5) * 4;
+	}
+
 	renderer.render(scene, camera);
 	window.requestAnimationFrame(tick);
 };

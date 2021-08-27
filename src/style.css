@@ -13,7 +13,7 @@ body {
 	top: 0;
 	left: 0;
 	outline: none;
-	display: none;
+	/* display: none; */
 }
 .welcomeScreen {
 	position: absolute;
@@ -44,6 +44,20 @@ body {
 	justify-content: flex-start;
 	align-items: center;
 	transition: width 1s height 1s;
+}
+.button {
+	/* box-sizing: border-box; */
+	position: absolute;
+	padding: 15px 100px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: white;
+	font-family: 'Klee One', cursive;
+	font-size: 50px;
+	font-weight: 400;
+
+	background-color: rgba(147, 135, 88, 1);
 }
 .browserTop {
 	box-sizing: border-box;

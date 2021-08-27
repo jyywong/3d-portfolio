@@ -55,7 +55,7 @@ export const bottomPosition = {
 	newRZ: 0
 };
 
-export const cameraPositions = [ topShelf, secondShelf, displayShelf, centerPosition, bottomPosition ];
+export const cameraPositions = [ topShelf, secondShelf, displayShelf, centerPosition ];
 
 export const moveCameraToNextPosition = (camera, newPosition) => {
 	const { x, y, z } = camera.position;
@@ -174,7 +174,7 @@ export let subtitleTimeline = [
 ];
 
 export const rotateSceneToBottom = (scene, camera) => {
-	const sceneRotation = { x: scene.position.x, y: scene.position.y };
+	const sceneRotation = { x: scene.rotation.x, y: scene.rotation.y };
 	const camZoom = { zoom: camera.zoom };
 	const newRX = Math.PI * 1.25;
 	const newRY = -Math.PI / 2;

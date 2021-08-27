@@ -22,14 +22,14 @@ import {
 import { DoubleSide } from 'three';
 
 // Picture
-// let picZoomout = false;
-// let picDisappear = false;
-// const picture = document.createElement('img');
-// picture.src = 'pictures/helloBrowser.png';
-// const browser = document.querySelector('.browser');
-// picture.style.height = '100%';
-// picture.style.transition = 'all .5s';
-// browser.appendChild(picture);
+let picZoomout = false;
+let picDisappear = false;
+const picture = document.createElement('img');
+picture.src = 'pictures/helloBrowser.png';
+const browser = document.querySelector('.browser');
+picture.style.height = '100%';
+picture.style.transition = 'all .5s';
+browser.appendChild(picture);
 
 // DEBUG
 const gui = new dat.GUI({ width: 800 });
@@ -80,20 +80,56 @@ camera.position.set(1, 1, 0.1);
 scene.add(camera);
 
 // Model
-const planeGeometry = new THREE.PlaneBufferGeometry(0.5, 2.5);
-const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-const plane1 = new THREE.Mesh(planeGeometry, planeMaterial);
-const plane2 = new THREE.Mesh(planeGeometry, planeMaterial);
-const plane3 = new THREE.Mesh(planeGeometry, planeMaterial);
+const planeGeometry = new THREE.PlaneBufferGeometry(2.75, 0.5);
+// const planeGeometry = new THREE.PlaneBufferGeometry(0.5 * 5, 2.5 * 5);
+const portfolioButton = textureLoader.load('pictures/portfolioButton.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const githubButton = textureLoader.load('pictures/githubButton.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const exploreButton = textureLoader.load('pictures/exploreScene.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const planeMaterialPort = new THREE.MeshBasicMaterial({ map: portfolioButton });
+
+const planeMaterialGit = new THREE.MeshBasicMaterial({ map: githubButton });
+
+const planeMaterialExplore = new THREE.MeshBasicMaterial({ map: exploreButton });
+
+const plane1 = new THREE.Mesh(planeGeometry, planeMaterialPort);
+const plane2 = new THREE.Mesh(planeGeometry, planeMaterialGit);
+const plane3 = new THREE.Mesh(planeGeometry, planeMaterialExplore);
+
+const varRot = -Math.PI / 2;
+
 plane1.rotation.x = Math.PI / 2;
+plane1.rotation.z = varRot;
 plane1.position.y = -0.01;
 plane1.position.x = 1;
 
 plane2.rotation.x = Math.PI / 2;
+plane2.rotation.z = varRot;
 plane2.position.y = -0.01;
 plane2.position.x = 0;
 
 plane3.rotation.x = Math.PI / 2;
+plane3.rotation.z = varRot;
 plane3.position.y = -0.01;
 plane3.position.x = -1;
 
@@ -134,13 +170,13 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	// y: 1.2007012737959566
 	// z: -0.28940390033229746
 
-	// camera.position.x = -1.582;
-	// camera.position.y = 1.149;
-	// camera.position.z = -0.3;
+	camera.position.x = -1.582;
+	camera.position.y = 1.149;
+	camera.position.z = -0.3;
 
-	camera.position.x = 0;
-	camera.position.y = 5;
-	camera.position.z = 5;
+	// camera.position.x = 0;
+	// camera.position.y = 5;
+	// camera.position.z = 5;
 
 	camera.lookAt(hMonitor.position);
 
@@ -159,12 +195,10 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor('#000133');
-// renderer.outputEncoding = THREE.sRGBEncoding;
-// renderer.shadowMap.enabled = true;
 
-const control = new OrbitControls(camera, renderer.domElement);
-control.enableDamping = true;
-control.enabled = false;
+// const control = new OrbitControls(camera, renderer.domElement);
+// control.enableDamping = true;
+// control.enabled = false;
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -187,28 +221,28 @@ window.addEventListener('dblclick', () => {
 	// camera.lookAt(shelfV.position);
 	// camera.rotation.y = Math.PI / 2;
 
-	// const subtitle = document.querySelector('.subtitle');
-	// subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+	const subtitle = document.querySelector('.subtitle');
+	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
 
-	// if (picZoomout === false) {
-	// 	picture.style.transform = 'scale(0.8)';
-	// 	picZoomout = true;
-	// } else if (picDisappear === false) {
-	// 	picture.style.opacity = 0;
-	// 	picture.style.transform = 'scaleY(0) scaleX(0.2)';
-	// 	picDisappear = true;
-	// } else {
-	// 	console.log('hello');
-	// 	console.log(nextPosition);
-	// 	moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
-	// 	nextPosition += 1;
-	// }
+	if (picZoomout === false) {
+		picture.style.transform = 'scale(0.8)';
+		picZoomout = true;
+	} else if (picDisappear === false) {
+		picture.style.opacity = 0;
+		picture.style.transform = 'scaleY(0) scaleX(0.2)';
+		picDisappear = true;
+	} else {
+		console.log('hello');
+		console.log(nextPosition);
+		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+		nextPosition += 1;
+	}
 
 	// if (nextPosition === cameraPositions.length) {
 	// 	control.enabled = true;
 	// }
 
-	rotateSceneToBottom(entireScene, camera);
+	// rotateSceneToBottom(entireScene, camera);
 	// camera.zoom = 3;
 	// camera.updateProjectionMatrix();
 
@@ -281,7 +315,6 @@ let currentVector = createRandomVector();
 
 const roombaP = MATTER.Bodies.circle(400, 400, 30);
 roombaP.friction = 0;
-// MATTER.Body.applyForce(roombaP, { x: 390, y: 400 }, { x: 0.5, y: 0.1 });
 
 MATTER.Composite.add(engine.world, [ roombaP, northWall, eastWall, southWall, westWall, shelfP, benchP, chairP ]);
 MATTER.Render.run(render);
@@ -332,7 +365,7 @@ const tick = () => {
 		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children, plane1, plane2, plane3 ];
 		const intersects = raycaster.intersectObjects(objectsToTest);
 		// console.log(hover);
-		console.log(currentIntersect);
+
 		if (intersects.length && currentIntersect === null) {
 			if (intersects[0].object === plane1) {
 				plane1.position.y = -0.5;
@@ -371,9 +404,9 @@ const tick = () => {
 	}
 	TWEEN.update();
 
-	if ((control.enabled = true)) {
-		control.update();
-	}
+	// if ((control.enabled = true)) {
+	// 	control.update();
+	// }
 
 	if (roomba !== null) {
 		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;

@@ -1,4 +1,5 @@
 import * as TWEEN from '@tweenjs/tween.js';
+import { CameraHelper } from 'three';
 
 export const centerPosition = {
 	newX: 3,
@@ -45,7 +46,16 @@ export const displayShelf = {
 	newRZ: 0
 };
 
-export const cameraPositions = [ zoomOutMonitor, topShelf, secondShelf, displayShelf, centerPosition ];
+export const bottomPosition = {
+	newX: 0,
+	newY: -2,
+	newZ: 0,
+	newRX: 0,
+	newRY: Math.PI,
+	newRZ: 0
+};
+
+export const cameraPositions = [ topShelf, secondShelf, displayShelf, centerPosition, bottomPosition ];
 
 export const moveCameraToNextPosition = (camera, newPosition) => {
 	const { x, y, z } = camera.position;
@@ -141,4 +151,56 @@ export const scaleTextbookIn = (textbooks, textbooksAnimating) => {
 			textbooksAnimating = false;
 		})
 		.start();
+};
+
+const helloSubtitle = 'My name is Jonathan Wong.';
+
+const zoomOutMonitorSubtitle = "I'm a self-taught web developer currently focused on the front-end.";
+
+const topShelfSubtitle = "I've learned a couple of languages such as Javascript and Python among others.";
+
+const midShelfSubtitle =
+	"I've also picked up a couple of frameworks/technologies along the way, the main one being React.";
+
+const displayBenchSubtitle =
+	"And with the skills and technologies I've picked up, I've tried my hand at a couple of projects.";
+
+export let subtitleTimeline = [
+	helloSubtitle,
+	zoomOutMonitorSubtitle,
+	topShelfSubtitle,
+	midShelfSubtitle,
+	displayBenchSubtitle
+];
+
+export const rotateSceneToBottom = (scene, camera) => {
+	const sceneRotation = { x: scene.position.x, y: scene.position.y };
+	const camZoom = { zoom: camera.zoom };
+	const newRX = Math.PI * 1.25;
+	const newRY = -Math.PI / 2;
+	const newZoomX = 2;
+	const rotateX = new TWEEN.Tween(sceneRotation)
+		.to({ x: newRX }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.x = sceneRotation.x;
+		});
+	const rotateY = new TWEEN.Tween(sceneRotation)
+		.to({ y: newRY }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.y = sceneRotation.y;
+		});
+	const zoomIn = new TWEEN.Tween(camZoom)
+		.to({ zoom: newZoomX }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			camera.zoom = camZoom.zoom;
+			camera.updateProjectionMatrix();
+			console.log(camZoom.zoom);
+			console.log(camera.zoom);
+		});
+
+	rotateY.start();
+	rotateX.chain(zoomIn).start();
 };

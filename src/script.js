@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import * as MATTER from 'matter-js';
+import * as dat from 'dat.gui';
 
 import {
 	moveCameraToNextPosition,
@@ -13,8 +14,31 @@ import {
 	moveBoxesIn,
 	rotateGlobe,
 	scaleTextbookOut,
-	scaleTextbookIn
+	scaleTextbookIn,
+	subtitleTimeline,
+	rotateSceneToBottom
 } from './helperFunctions';
+
+// Picture
+// let picZoomout = false;
+// let picDisappear = false;
+// const picture = document.createElement('img');
+// picture.src = 'pictures/helloBrowser.png';
+// const browser = document.querySelector('.browser');
+// picture.style.height = '100%';
+// picture.style.transition = 'all .5s';
+// browser.appendChild(picture);
+
+// DEBUG
+const gui = new dat.GUI({ width: 800 });
+const debugObject = {
+	cameraX: -1.582,
+	cameraY: 1.149,
+	cameraZ: -0.3
+};
+gui.add(debugObject, 'cameraX').min(-2).max(2).step(0.001);
+gui.add(debugObject, 'cameraY').min(-2).max(2).step(0.001);
+gui.add(debugObject, 'cameraZ').min(-2).max(2).step(0.001);
 
 const canvas = document.querySelector('.webgl');
 
@@ -53,30 +77,11 @@ camera.position.set(1, 1, 0.1);
 
 scene.add(camera);
 
-// Lights
-// const light = new THREE.AmbientLight(0x404040);
-// light.intensity = 5;
-// scene.add(light);
-
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-// const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
-
-// scene.add(directionalLight.target);
-// scene.add(helper);
-// scene.add(directionalLight);
-
-// Pointlight
-
-// const pointLight = new THREE.PointLight(0xfdfbd3, 1, 100);
-// pointLight.position.set(2, 2, 2);
-// // pointLight.decay = 2;
-// pointLight.castShadow = true;
-
-// const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-// scene.add(pointLightHelper);
-// scene.add(pointLight);
-
 // Model
+let entireScene = null;
+
+let hMonitor = null;
+
 let displayBenchBoxes = null;
 let displayBenchBoxesAnimating = false;
 
@@ -94,14 +99,14 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 			child.material = bakedMaterial;
 		}
 	});
-	const hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
+	entireScene = gltf.scene;
+	hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
 	const shelf = gltf.scene.children.find((child) => child.name === 'shelf');
 	const tv = gltf.scene.children.find((child) => child.name === 'tv');
 	displayBenchBoxes = gltf.scene.children.find((child) => child.name === 'displayBenchBoxes');
 	globe = gltf.scene.children.find((child) => child.name === 'globe').children;
 	textbooks = gltf.scene.children.find((child) => child.name === 'textbooks');
 	roomba = gltf.scene.children.find((child) => child.name === 'roomba');
-	console.log(roomba);
 	// pointLight.position.set(lamp.position);
 
 	// Position to look at hMonitor
@@ -109,13 +114,13 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	// y: 1.2007012737959566
 	// z: -0.28940390033229746
 
-	camera.position.x = -1.5427103804282107;
-	camera.position.y = 1.2007012737959566 + 0.03;
-	camera.position.z = -0.28940390033229746 - 0.008;
+	// camera.position.x = -1.582;
+	// camera.position.y = 1.149;
+	// camera.position.z = -0.3;
 
-	// camera.position.x = 1;
-	// camera.position.y = 1;
-	// camera.position.z = 0.1;
+	camera.position.x = 0;
+	camera.position.y = 5;
+	camera.position.z = 5;
 
 	camera.lookAt(hMonitor.position);
 
@@ -139,7 +144,7 @@ renderer.setClearColor('#000133');
 
 const control = new OrbitControls(camera, renderer.domElement);
 control.enableDamping = true;
-// control.enabled = false;
+control.enabled = false;
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -157,15 +162,37 @@ window.addEventListener('resize', () => {
 
 // // Handle user input
 let nextPosition = 0;
+let subtitlePosition = 0;
 window.addEventListener('dblclick', () => {
-	moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 	// camera.lookAt(shelfV.position);
 	// camera.rotation.y = Math.PI / 2;
 
-	if (nextPosition === cameraPositions.length) {
-		control.enabled = true;
-	}
-	nextPosition += 1;
+	// const subtitle = document.querySelector('.subtitle');
+	// subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+
+	// if (picZoomout === false) {
+	// 	picture.style.transform = 'scale(0.8)';
+	// 	picZoomout = true;
+	// } else if (picDisappear === false) {
+	// 	picture.style.opacity = 0;
+	// 	picture.style.transform = 'scaleY(0) scaleX(0.2)';
+	// 	picDisappear = true;
+	// } else {
+	// 	console.log('hello');
+	// 	console.log(nextPosition);
+	// 	moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+	// 	nextPosition += 1;
+	// }
+
+	// if (nextPosition === cameraPositions.length) {
+	// 	control.enabled = true;
+	// }
+
+	rotateSceneToBottom(entireScene, camera);
+	// camera.zoom = 3;
+	// camera.updateProjectionMatrix();
+
+	subtitlePosition += 1;
 	console.log(displayBenchBoxes.position.z);
 });
 
@@ -248,6 +275,14 @@ const tick = () => {
 	const elapsedTime = clock.getElapsedTime();
 	const deltaTime = elapsedTime - oldElapsedTime;
 	oldElapsedTime = elapsedTime;
+
+	// camera.position.x = debugObject.cameraX;
+	// camera.position.y = debugObject.cameraY;
+	// camera.position.z = debugObject.cameraZ;
+	// if (hMonitor !== null) {
+	// 	camera.lookAt(hMonitor.position);
+	// }
+
 	// console.log(deltaTime);
 
 	//  --------------------------------------------

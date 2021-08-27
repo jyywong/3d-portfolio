@@ -204,3 +204,15 @@ export const rotateSceneToBottom = (scene, camera) => {
 	rotateY.start();
 	rotateX.chain(zoomIn).start();
 };
+
+export const hoverAnimation = (plane, newY) => {
+	const planePosition = { y: plane.position.y };
+	const newPosition = newY;
+	new TWEEN.Tween(planePosition)
+		.to({ y: newPosition }, 200)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			plane.position.y = planePosition.y;
+		})
+		.start();
+};

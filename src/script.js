@@ -16,8 +16,10 @@ import {
 	scaleTextbookOut,
 	scaleTextbookIn,
 	subtitleTimeline,
-	rotateSceneToBottom
+	rotateSceneToBottom,
+	hoverAnimation
 } from './helperFunctions';
+import { DoubleSide } from 'three';
 
 // Picture
 // let picZoomout = false;
@@ -78,6 +80,23 @@ camera.position.set(1, 1, 0.1);
 scene.add(camera);
 
 // Model
+const planeGeometry = new THREE.PlaneBufferGeometry(0.5, 2.5);
+const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const plane1 = new THREE.Mesh(planeGeometry, planeMaterial);
+const plane2 = new THREE.Mesh(planeGeometry, planeMaterial);
+const plane3 = new THREE.Mesh(planeGeometry, planeMaterial);
+plane1.rotation.x = Math.PI / 2;
+plane1.position.y = -0.01;
+plane1.position.x = 1;
+
+plane2.rotation.x = Math.PI / 2;
+plane2.position.y = -0.01;
+plane2.position.x = 0;
+
+plane3.rotation.x = Math.PI / 2;
+plane3.position.y = -0.01;
+plane3.position.x = -1;
+
 let entireScene = null;
 
 let hMonitor = null;
@@ -99,6 +118,7 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 			child.material = bakedMaterial;
 		}
 	});
+	gltf.scene.add(plane1, plane2, plane3);
 	entireScene = gltf.scene;
 	hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
 	const shelf = gltf.scene.children.find((child) => child.name === 'shelf');
@@ -309,14 +329,29 @@ const tick = () => {
 	if (displayBenchBoxes !== null) {
 		// Raycaster
 		raycaster.setFromCamera(mouse, camera);
-		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children ];
+		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children, plane1, plane2, plane3 ];
 		const intersects = raycaster.intersectObjects(objectsToTest);
+		// console.log(hover);
+		console.log(currentIntersect);
+		if (intersects.length && currentIntersect === null) {
+			if (intersects[0].object === plane1) {
+				plane1.position.y = -0.5;
+			} else if (intersects[0].object === plane2) {
+				plane2.position.y = -0.5;
+			} else if (intersects[0].object === plane3) {
+				plane3.position.y = -0.5;
+			}
+		} else {
+			plane1.position.y = -0.01;
+			plane2.position.y = -0.01;
+			plane3.position.y = -0.01;
+			currentIntersect = null;
+		}
 
 		if (intersects.length && intersects[0].object === displayBenchBoxes) {
 			if (currentIntersect === null && displayBenchBoxesAnimating === false) {
 				moveBoxesOut(displayBenchBoxes);
 			}
-
 			currentIntersect = intersects[0];
 		} else if (intersects.length && globe.includes(intersects[0].object)) {
 			rotateGlobe(globe, elapsedTime);

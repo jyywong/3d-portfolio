@@ -65,7 +65,7 @@ const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
 
 // Textures
-const bakedTexture = textureLoader.load('blender/baked2roomba.jpg');
+const bakedTexture = textureLoader.load('blender/baked2FW.jpg');
 bakedTexture.flipY = false;
 
 // Materials
@@ -148,7 +148,7 @@ let textbooksAnimating = false;
 
 let roomba = null;
 
-gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
+gltfLoader.load('blender/portfolioOptimized2text.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
 		// console.log(child);
 		if (![ 'reactLogo', 'reduxLogo', 'djangoLogo', 'jestLogo' ].includes(child.name)) {
@@ -365,20 +365,20 @@ const tick = () => {
 		const intersects = raycaster.intersectObjects(objectsToTest);
 		// console.log(hover);
 
-		if (intersects.length && currentIntersect === null) {
-			if (intersects[0].object === plane1) {
-				plane1.position.y = -0.5;
-			} else if (intersects[0].object === plane2) {
-				plane2.position.y = -0.5;
-			} else if (intersects[0].object === plane3) {
-				plane3.position.y = -0.5;
-			}
-		} else {
-			plane1.position.y = -0.01;
-			plane2.position.y = -0.01;
-			plane3.position.y = -0.01;
-			currentIntersect = null;
-		}
+		// if (intersects.length && currentIntersect === null) {
+		// 	if (intersects[0].object === plane1) {
+		// 		plane1.position.y = -0.5;
+		// 	} else if (intersects[0].object === plane2) {
+		// 		plane2.position.y = -0.5;
+		// 	} else if (intersects[0].object === plane3) {
+		// 		plane3.position.y = -0.5;
+		// 	}
+		// } else {
+		// 	plane1.position.y = -0.01;
+		// 	plane2.position.y = -0.01;
+		// 	plane3.position.y = -0.01;
+		// 	currentIntersect = null;
+		// }
 
 		if (intersects.length && intersects[0].object === displayBenchBoxes) {
 			if (currentIntersect === null && displayBenchBoxesAnimating === false) {

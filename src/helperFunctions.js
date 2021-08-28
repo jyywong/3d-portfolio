@@ -1,5 +1,4 @@
 import * as TWEEN from '@tweenjs/tween.js';
-import { CameraHelper } from 'three';
 
 export const centerPosition = {
 	newX: 3,
@@ -173,12 +172,13 @@ export let subtitleTimeline = [
 	displayBenchSubtitle
 ];
 
-export const rotateSceneToBottom = (scene, camera) => {
+export const rotateSceneToBottom = (scene, camera, origin) => {
 	const sceneRotation = { x: scene.rotation.x, y: scene.rotation.y };
 	const camZoom = { zoom: camera.zoom };
+	const camPos = { x: camera.position.x };
 	const newRX = Math.PI * 1.25;
-	const newRY = -Math.PI / 2;
-	const newZoomX = 2;
+	const newRY = -Math.PI * 0.5;
+	const newZoomX = 1.2;
 	const rotateX = new TWEEN.Tween(sceneRotation)
 		.to({ x: newRX }, 2000)
 		.easing(TWEEN.Easing.Quadratic.Out)
@@ -191,8 +191,12 @@ export const rotateSceneToBottom = (scene, camera) => {
 		.onUpdate(() => {
 			scene.rotation.y = sceneRotation.y;
 		});
+	const cameraMove = new TWEEN.Tween(camPos).to({ x: 0 }, 1000).onUpdate(() => {
+		camera.position.x = camPos.x;
+		camera.lookAt(origin);
+	});
 	const zoomIn = new TWEEN.Tween(camZoom)
-		.to({ zoom: newZoomX }, 2000)
+		.to({ zoom: newZoomX }, 1000)
 		.easing(TWEEN.Easing.Quadratic.Out)
 		.onUpdate(() => {
 			camera.zoom = camZoom.zoom;
@@ -202,6 +206,7 @@ export const rotateSceneToBottom = (scene, camera) => {
 		});
 
 	rotateY.start();
+	cameraMove.start();
 	rotateX.chain(zoomIn).start();
 };
 

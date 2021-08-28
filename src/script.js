@@ -17,7 +17,8 @@ import {
 	scaleTextbookIn,
 	subtitleTimeline,
 	rotateSceneToBottom,
-	hoverAnimation
+	hoverAnimation,
+	centerPosition
 } from './helperFunctions';
 import { DoubleSide } from 'three';
 
@@ -174,11 +175,12 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	camera.position.y = 1.149;
 	camera.position.z = -0.3;
 
-	// camera.position.x = 0;
-	// camera.position.y = 5;
-	// camera.position.z = 5;
+	// camera.position.x = 3;
+	// camera.position.y = 3;
+	// camera.position.z = 3;
 
 	camera.lookAt(hMonitor.position);
+	// camera.lookAt(new THREE.Vector3());
 
 	console.log(camera.rotation);
 
@@ -223,8 +225,9 @@ window.addEventListener('dblclick', () => {
 
 	const subtitle = document.querySelector('.subtitle');
 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
-
-	if (picZoomout === false) {
+	if (nextPosition === cameraPositions.length) {
+		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
+	} else if (picZoomout === false) {
 		picture.style.transform = 'scale(0.8)';
 		picZoomout = true;
 	} else if (picDisappear === false) {
@@ -241,10 +244,6 @@ window.addEventListener('dblclick', () => {
 	// if (nextPosition === cameraPositions.length) {
 	// 	control.enabled = true;
 	// }
-
-	// rotateSceneToBottom(entireScene, camera);
-	// camera.zoom = 3;
-	// camera.updateProjectionMatrix();
 
 	subtitlePosition += 1;
 	console.log(displayBenchBoxes.position.z);

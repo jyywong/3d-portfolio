@@ -45,7 +45,16 @@ export const displayShelf = {
 	newRZ: 0
 };
 
-export const cameraPositions = [ zoomOutMonitor, topShelf, secondShelf, displayShelf, centerPosition ];
+export const bottomPosition = {
+	newX: 0,
+	newY: -2,
+	newZ: 0,
+	newRX: 0,
+	newRY: Math.PI,
+	newRZ: 0
+};
+
+export const cameraPositions = [ topShelf, secondShelf, displayShelf, centerPosition ];
 
 export const moveCameraToNextPosition = (camera, newPosition) => {
 	const { x, y, z } = camera.position;
@@ -139,6 +148,76 @@ export const scaleTextbookIn = (textbooks, textbooksAnimating) => {
 		})
 		.onStop(() => {
 			textbooksAnimating = false;
+		})
+		.start();
+};
+
+const helloSubtitle = 'My name is Jonathan Wong.';
+
+const zoomOutMonitorSubtitle = "I'm a self-taught web developer currently focused on the front-end.";
+
+const topShelfSubtitle = "I've learned a couple of languages such as Javascript and Python among others.";
+
+const midShelfSubtitle =
+	"I've also picked up a couple of frameworks/technologies along the way, the main one being React.";
+
+const displayBenchSubtitle =
+	"And with the skills and technologies I've picked up, I've tried my hand at a couple of projects.";
+
+export let subtitleTimeline = [
+	helloSubtitle,
+	zoomOutMonitorSubtitle,
+	topShelfSubtitle,
+	midShelfSubtitle,
+	displayBenchSubtitle
+];
+
+export const rotateSceneToBottom = (scene, camera, origin) => {
+	const sceneRotation = { x: scene.rotation.x, y: scene.rotation.y };
+	const camZoom = { zoom: camera.zoom };
+	const camPos = { x: camera.position.x };
+	const newRX = Math.PI * 1.25;
+	const newRY = -Math.PI * 0.5;
+	const newZoomX = 1.2;
+	const rotateX = new TWEEN.Tween(sceneRotation)
+		.to({ x: newRX }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.x = sceneRotation.x;
+		});
+	const rotateY = new TWEEN.Tween(sceneRotation)
+		.to({ y: newRY }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.y = sceneRotation.y;
+		});
+	const cameraMove = new TWEEN.Tween(camPos).to({ x: 0 }, 1000).onUpdate(() => {
+		camera.position.x = camPos.x;
+		camera.lookAt(origin);
+	});
+	const zoomIn = new TWEEN.Tween(camZoom)
+		.to({ zoom: newZoomX }, 1000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			camera.zoom = camZoom.zoom;
+			camera.updateProjectionMatrix();
+			console.log(camZoom.zoom);
+			console.log(camera.zoom);
+		});
+
+	rotateY.start();
+	cameraMove.start();
+	rotateX.chain(zoomIn).start();
+};
+
+export const hoverAnimation = (plane, newY) => {
+	const planePosition = { y: plane.position.y };
+	const newPosition = newY;
+	new TWEEN.Tween(planePosition)
+		.to({ y: newPosition }, 200)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			plane.position.y = planePosition.y;
 		})
 		.start();
 };

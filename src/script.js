@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import * as MATTER from 'matter-js';
+import * as dat from 'dat.gui';
 
 import {
 	moveCameraToNextPosition,
@@ -13,8 +14,34 @@ import {
 	moveBoxesIn,
 	rotateGlobe,
 	scaleTextbookOut,
-	scaleTextbookIn
+	scaleTextbookIn,
+	subtitleTimeline,
+	rotateSceneToBottom,
+	hoverAnimation,
+	centerPosition
 } from './helperFunctions';
+import { DoubleSide } from 'three';
+
+// Picture
+let picZoomout = false;
+let picDisappear = false;
+const picture = document.createElement('img');
+picture.src = 'pictures/helloBrowser.png';
+const browser = document.querySelector('.browser');
+picture.style.height = '100%';
+picture.style.transition = 'all .5s';
+browser.appendChild(picture);
+
+// DEBUG
+const gui = new dat.GUI({ width: 800 });
+const debugObject = {
+	cameraX: -1.582,
+	cameraY: 1.149,
+	cameraZ: -0.3
+};
+gui.add(debugObject, 'cameraX').min(-2).max(2).step(0.001);
+gui.add(debugObject, 'cameraY').min(-2).max(2).step(0.001);
+gui.add(debugObject, 'cameraZ').min(-2).max(2).step(0.001);
 
 const canvas = document.querySelector('.webgl');
 
@@ -38,7 +65,7 @@ const textureLoader = new THREE.TextureLoader();
 const gltfLoader = new GLTFLoader();
 
 // Textures
-const bakedTexture = textureLoader.load('blender/baked2roomba.jpg');
+const bakedTexture = textureLoader.load('blender/baked2FW.jpg');
 bakedTexture.flipY = false;
 
 // Materials
@@ -53,30 +80,64 @@ camera.position.set(1, 1, 0.1);
 
 scene.add(camera);
 
-// Lights
-// const light = new THREE.AmbientLight(0x404040);
-// light.intensity = 5;
-// scene.add(light);
-
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-// const helper = new THREE.DirectionalLightHelper(directionalLight, 5);
-
-// scene.add(directionalLight.target);
-// scene.add(helper);
-// scene.add(directionalLight);
-
-// Pointlight
-
-// const pointLight = new THREE.PointLight(0xfdfbd3, 1, 100);
-// pointLight.position.set(2, 2, 2);
-// // pointLight.decay = 2;
-// pointLight.castShadow = true;
-
-// const pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-// scene.add(pointLightHelper);
-// scene.add(pointLight);
-
 // Model
+const planeGeometry = new THREE.PlaneBufferGeometry(2.75, 0.5);
+// const planeGeometry = new THREE.PlaneBufferGeometry(0.5 * 5, 2.5 * 5);
+const portfolioButton = textureLoader.load('pictures/portfolioButton.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const githubButton = textureLoader.load('pictures/githubButton.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const exploreButton = textureLoader.load('pictures/exploreScene.png', (tex) => {
+	let imgRatio = tex.image.width / tex.image.height;
+	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
+	tex.wrapS = THREE.RepeatWrapping;
+	tex.repeat.x = planeRatio / imgRatio;
+	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
+});
+
+const planeMaterialPort = new THREE.MeshBasicMaterial({ map: portfolioButton });
+
+const planeMaterialGit = new THREE.MeshBasicMaterial({ map: githubButton });
+
+const planeMaterialExplore = new THREE.MeshBasicMaterial({ map: exploreButton });
+
+const plane1 = new THREE.Mesh(planeGeometry, planeMaterialPort);
+const plane2 = new THREE.Mesh(planeGeometry, planeMaterialGit);
+const plane3 = new THREE.Mesh(planeGeometry, planeMaterialExplore);
+
+const varRot = -Math.PI / 2;
+
+plane1.rotation.x = Math.PI / 2;
+plane1.rotation.z = varRot;
+plane1.position.y = -0.01;
+plane1.position.x = 1;
+
+plane2.rotation.x = Math.PI / 2;
+plane2.rotation.z = varRot;
+plane2.position.y = -0.01;
+plane2.position.x = 0;
+
+plane3.rotation.x = Math.PI / 2;
+plane3.rotation.z = varRot;
+plane3.position.y = -0.01;
+plane3.position.x = -1;
+
+let entireScene = null;
+
+let hMonitor = null;
+
 let displayBenchBoxes = null;
 let displayBenchBoxesAnimating = false;
 
@@ -87,21 +148,22 @@ let textbooksAnimating = false;
 
 let roomba = null;
 
-gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
+gltfLoader.load('blender/portfolioOptimized2text.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
 		// console.log(child);
 		if (![ 'reactLogo', 'reduxLogo', 'djangoLogo', 'jestLogo' ].includes(child.name)) {
 			child.material = bakedMaterial;
 		}
 	});
-	const hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
+	gltf.scene.add(plane1, plane2, plane3);
+	entireScene = gltf.scene;
+	hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
 	const shelf = gltf.scene.children.find((child) => child.name === 'shelf');
 	const tv = gltf.scene.children.find((child) => child.name === 'tv');
 	displayBenchBoxes = gltf.scene.children.find((child) => child.name === 'displayBenchBoxes');
 	globe = gltf.scene.children.find((child) => child.name === 'globe').children;
 	textbooks = gltf.scene.children.find((child) => child.name === 'textbooks');
 	roomba = gltf.scene.children.find((child) => child.name === 'roomba');
-	console.log(roomba);
 	// pointLight.position.set(lamp.position);
 
 	// Position to look at hMonitor
@@ -109,15 +171,16 @@ gltfLoader.load('blender/portfolioOptimized2.glb', (gltf) => {
 	// y: 1.2007012737959566
 	// z: -0.28940390033229746
 
-	camera.position.x = -1.5427103804282107;
-	camera.position.y = 1.2007012737959566 + 0.03;
-	camera.position.z = -0.28940390033229746 - 0.008;
+	camera.position.x = -1.582;
+	camera.position.y = 1.149;
+	camera.position.z = -0.3;
 
-	// camera.position.x = 1;
-	// camera.position.y = 1;
-	// camera.position.z = 0.1;
+	// camera.position.x = 3;
+	// camera.position.y = 3;
+	// camera.position.z = 3;
 
 	camera.lookAt(hMonitor.position);
+	// camera.lookAt(new THREE.Vector3());
 
 	console.log(camera.rotation);
 
@@ -134,11 +197,9 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor('#000133');
-// renderer.outputEncoding = THREE.sRGBEncoding;
-// renderer.shadowMap.enabled = true;
 
-const control = new OrbitControls(camera, renderer.domElement);
-control.enableDamping = true;
+// const control = new OrbitControls(camera, renderer.domElement);
+// control.enableDamping = true;
 // control.enabled = false;
 
 // Handle resize
@@ -157,15 +218,34 @@ window.addEventListener('resize', () => {
 
 // // Handle user input
 let nextPosition = 0;
+let subtitlePosition = 0;
 window.addEventListener('dblclick', () => {
-	moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 	// camera.lookAt(shelfV.position);
 	// camera.rotation.y = Math.PI / 2;
 
+	const subtitle = document.querySelector('.subtitle');
+	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
 	if (nextPosition === cameraPositions.length) {
-		control.enabled = true;
+		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
+	} else if (picZoomout === false) {
+		picture.style.transform = 'scale(0.8)';
+		picZoomout = true;
+	} else if (picDisappear === false) {
+		picture.style.opacity = 0;
+		picture.style.transform = 'scaleY(0) scaleX(0.2)';
+		picDisappear = true;
+	} else {
+		console.log('hello');
+		console.log(nextPosition);
+		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+		nextPosition += 1;
 	}
-	nextPosition += 1;
+
+	// if (nextPosition === cameraPositions.length) {
+	// 	control.enabled = true;
+	// }
+
+	subtitlePosition += 1;
 	console.log(displayBenchBoxes.position.z);
 });
 
@@ -234,7 +314,6 @@ let currentVector = createRandomVector();
 
 const roombaP = MATTER.Bodies.circle(400, 400, 30);
 roombaP.friction = 0;
-// MATTER.Body.applyForce(roombaP, { x: 390, y: 400 }, { x: 0.5, y: 0.1 });
 
 MATTER.Composite.add(engine.world, [ roombaP, northWall, eastWall, southWall, westWall, shelfP, benchP, chairP ]);
 MATTER.Render.run(render);
@@ -248,6 +327,14 @@ const tick = () => {
 	const elapsedTime = clock.getElapsedTime();
 	const deltaTime = elapsedTime - oldElapsedTime;
 	oldElapsedTime = elapsedTime;
+
+	// camera.position.x = debugObject.cameraX;
+	// camera.position.y = debugObject.cameraY;
+	// camera.position.z = debugObject.cameraZ;
+	// if (hMonitor !== null) {
+	// 	camera.lookAt(hMonitor.position);
+	// }
+
 	// console.log(deltaTime);
 
 	//  --------------------------------------------
@@ -274,14 +361,29 @@ const tick = () => {
 	if (displayBenchBoxes !== null) {
 		// Raycaster
 		raycaster.setFromCamera(mouse, camera);
-		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children ];
+		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children, plane1, plane2, plane3 ];
 		const intersects = raycaster.intersectObjects(objectsToTest);
+		// console.log(hover);
+
+		// if (intersects.length && currentIntersect === null) {
+		// 	if (intersects[0].object === plane1) {
+		// 		plane1.position.y = -0.5;
+		// 	} else if (intersects[0].object === plane2) {
+		// 		plane2.position.y = -0.5;
+		// 	} else if (intersects[0].object === plane3) {
+		// 		plane3.position.y = -0.5;
+		// 	}
+		// } else {
+		// 	plane1.position.y = -0.01;
+		// 	plane2.position.y = -0.01;
+		// 	plane3.position.y = -0.01;
+		// 	currentIntersect = null;
+		// }
 
 		if (intersects.length && intersects[0].object === displayBenchBoxes) {
 			if (currentIntersect === null && displayBenchBoxesAnimating === false) {
 				moveBoxesOut(displayBenchBoxes);
 			}
-
 			currentIntersect = intersects[0];
 		} else if (intersects.length && globe.includes(intersects[0].object)) {
 			rotateGlobe(globe, elapsedTime);
@@ -301,9 +403,9 @@ const tick = () => {
 	}
 	TWEEN.update();
 
-	if ((control.enabled = true)) {
-		control.update();
-	}
+	// if ((control.enabled = true)) {
+	// 	control.update();
+	// }
 
 	if (roomba !== null) {
 		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;

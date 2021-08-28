@@ -15,3 +15,106 @@ body {
 	outline: none;
 	/* display: none; */
 }
+.welcomeScreen {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 100%;
+	height: 100%;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	/* display: none; */
+}
+
+.browser {
+	box-sizing: border-box;
+	width: 112%;
+	height: 112%;
+
+	border-radius: 10px;
+	/* background-color: #fff; */
+	overflow: hidden;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	transition: width 1s height 1s;
+}
+.button {
+	/* box-sizing: border-box; */
+	position: absolute;
+	padding: 15px 100px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	color: white;
+	font-family: 'Klee One', cursive;
+	font-size: 50px;
+	font-weight: 400;
+
+	background-color: rgba(147, 135, 88, 1);
+}
+.browserTop {
+	box-sizing: border-box;
+	flex-basis: 5%;
+	width: 100%;
+	background-color: rgb(53, 51, 51);
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	padding-left: 15px;
+}
+
+.redButton {
+	border-radius: 10px;
+	background-color: red;
+	height: 18px;
+	width: 18px;
+}
+.yellowButton {
+	margin-left: 10px;
+	border-radius: 10px;
+	background-color: yellow;
+	height: 18px;
+	width: 18px;
+}
+.greenButton {
+	margin-left: 10px;
+	border-radius: 10px;
+	background-color: green;
+	height: 18px;
+	width: 18px;
+}
+.browserContent {
+	flex-grow: 1;
+	display: flex;
+	align-items: center;
+	font-family: 'Klee One', cursive;
+	font-size: 150px;
+	padding: 10px;
+	text-align: center;
+}
+
+.subtitle {
+	border-radius: 10px;
+	box-sizing: border-box;
+	position: absolute;
+	top: 90%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	padding: 10px;
+	text-align: center;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	color: white;
+	background-color: rgba(53, 51, 51, 0.8);
+	font-size: 40px;
+}

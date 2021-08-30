@@ -27,7 +27,7 @@ body {
 	justify-content: center;
 	align-items: center;
 
-	display: none;
+	/* display: none; */
 }
 
 .browser {
@@ -117,4 +117,16 @@ body {
 	color: white;
 	background-color: rgba(53, 51, 51, 0.8);
 	font-size: 40px;
+
+	visibility: hidden;
+}
+.controls {
+	box-sizing: border-box;
+	padding: 5vw;
+	position: absolute;
+	width: 100%;
+	opacity: 50%;
+	color: gray;
+	display: flex;
+	justify-content: space-between;
 }

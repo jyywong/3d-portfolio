@@ -18,8 +18,16 @@ export const zoomOutMonitor = {
 	newRZ: 2.9591333121149503
 };
 
+export const vMonitor = {
+	newX: -1.31,
+	newY: 1.241,
+	newZ: -0.746,
+	newRX: -0.37688552872564224,
+	newRY: 1.4416617855710734,
+	newRZ: 0.37403309357013126
+};
 export const topShelf = {
-	newX: -0.75,
+	newX: -0.75 - 0.2,
 	newY: 2.2,
 	newZ: 1.15,
 	newRX: -1.5830496534737715,
@@ -28,7 +36,7 @@ export const topShelf = {
 };
 
 export const secondShelf = {
-	newX: -0.75,
+	newX: -0.75 - 0.2,
 	newY: 1.8,
 	newZ: 1.15,
 	newRX: -1.591994818810587,
@@ -54,7 +62,7 @@ export const bottomPosition = {
 	newRZ: 0
 };
 
-export const cameraPositions = [ topShelf, secondShelf, displayShelf, centerPosition ];
+export const cameraPositions = [ vMonitor, topShelf, secondShelf, displayShelf, centerPosition ];
 
 export const moveCameraToNextPosition = (camera, newPosition) => {
 	const { x, y, z } = camera.position;

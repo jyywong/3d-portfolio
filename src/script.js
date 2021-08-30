@@ -20,7 +20,6 @@ import {
 	hoverAnimation,
 	centerPosition
 } from './helperFunctions';
-import { DoubleSide } from 'three';
 
 // Picture
 let picZoomout = false;
@@ -35,9 +34,9 @@ browser.appendChild(picture);
 // DEBUG
 const gui = new dat.GUI({ width: 800 });
 const debugObject = {
-	cameraX: -1.582,
-	cameraY: 1.149,
-	cameraZ: -0.3
+	cameraX: -1.31,
+	cameraY: 1.241,
+	cameraZ: -0.746
 };
 gui.add(debugObject, 'cameraX').min(-2).max(2).step(0.001);
 gui.add(debugObject, 'cameraY').min(-2).max(2).step(0.001);
@@ -72,6 +71,7 @@ const auctionHouseScreen = textureLoader.load('pictures/aHTexture.png');
 const inventoryManagementScreen = textureLoader.load('pictures/iMSTexture.png');
 const tripPlannerScreen = textureLoader.load('pictures/tPTexture.png');
 
+const vMonitor = textureLoader.load('pictures/webDevReact.png');
 // Materials
 const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
 
@@ -90,6 +90,11 @@ const tvGeometry = new THREE.PlaneBufferGeometry(1.4292, 0.9721);
 const tvMaterial = new THREE.MeshBasicMaterial({ map: auctionHouseScreen });
 const tvScreen = new THREE.Mesh(tvGeometry, tvMaterial);
 scene.add(tvScreen);
+
+const vMonGeometry = new THREE.PlaneBufferGeometry(0.3586, 0.5547);
+const vMonMaterial = new THREE.MeshBasicMaterial({ map: vMonitor });
+const vMonScreen = new THREE.Mesh(vMonGeometry, vMonMaterial);
+scene.add(vMonScreen);
 
 console.log(tvMaterial.color);
 
@@ -152,6 +157,7 @@ gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 	gltf.scene.add(plane1, plane2, plane3);
 	entireScene = gltf.scene;
 	hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
+	const vMonitor = gltf.scene.children.find((child) => child.name === 'vMonitor');
 	const shelf = gltf.scene.children.find((child) => child.name === 'shelf');
 	const tv = gltf.scene.children.find((child) => child.name === 'tv');
 	displayBenchBoxes = gltf.scene.children.find((child) => child.name === 'displayBenchBoxes');
@@ -161,21 +167,27 @@ gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 	// pointLight.position.set(lamp.position);
 	tvScreen.position.set(tv.position.x, tv.position.y, tv.position.z);
 	tvScreen.position.z += 0.01;
-	// Position to look at hMonitor
-	// x: -1.5427103804282107
-	// y: 1.2007012737959566
-	// z: -0.28940390033229746
+	entireScene.add(tvScreen);
 
-	// camera.position.x = -1.582;
-	// camera.position.y = 1.149;
-	// camera.position.z = -0.3;
+	console.log('vmonitor', vMonitor.rotation);
+	vMonScreen.position.set(vMonitor.position.x, vMonitor.position.y, vMonitor.position.z);
+	vMonScreen.position.z += 0.001;
+	vMonScreen.position.x += 0.004;
 
-	camera.position.x = 3;
-	camera.position.y = 3;
-	camera.position.z = 3;
+	vMonScreen.rotation.set(vMonitor.rotation.x, vMonitor.rotation.y + Math.PI / 2, vMonitor.rotation.z);
+	entireScene.add(vMonScreen);
+	console.log('vmonScreen', vMonScreen.rotation);
 
-	// camera.lookAt(hMonitor.position);
-	camera.lookAt(new THREE.Vector3());
+	camera.position.x = -1.582;
+	camera.position.y = 1.149;
+	camera.position.z = -0.3;
+
+	// camera.position.x = 3;
+	// camera.position.y = 3;
+	// camera.position.z = 3;
+
+	camera.lookAt(hMonitor.position);
+	// camera.lookAt(new THREE.Vector3());
 
 	console.log(camera.rotation);
 
@@ -193,9 +205,9 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor('#000133');
 
-const control = new OrbitControls(camera, renderer.domElement);
-control.enableDamping = true;
-control.enabled = false;
+// const control = new OrbitControls(camera, renderer.domElement);
+// control.enableDamping = true;
+// control.enabled = false;
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -212,14 +224,15 @@ window.addEventListener('resize', () => {
 });
 
 // // Handle user input
+let picHasDisappeared = false;
 let nextPosition = 0;
 let subtitlePosition = 0;
 window.addEventListener('dblclick', () => {
 	// camera.lookAt(shelfV.position);
 	// camera.rotation.y = Math.PI / 2;
-
 	const subtitle = document.querySelector('.subtitle');
 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+	subtitle.style.visibility = 'visible';
 	if (nextPosition === cameraPositions.length) {
 		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
 	} else if (picZoomout === false) {
@@ -228,9 +241,10 @@ window.addEventListener('dblclick', () => {
 	} else if (picDisappear === false) {
 		picture.style.opacity = 0;
 		picture.style.transform = 'scaleY(0) scaleX(0.2)';
+		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+		nextPosition += 1;
 		picDisappear = true;
 	} else {
-		console.log('hello');
 		console.log(nextPosition);
 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 		nextPosition += 1;
@@ -326,8 +340,8 @@ const tick = () => {
 	// camera.position.x = debugObject.cameraX;
 	// camera.position.y = debugObject.cameraY;
 	// camera.position.z = debugObject.cameraZ;
-	// if (hMonitor !== null) {
-	// 	camera.lookAt(hMonitor.position);
+	// if (vMonScreen !== null) {
+	// 	camera.lookAt(vMonScreen.position);
 	// }
 
 	// console.log(deltaTime);
@@ -401,9 +415,9 @@ const tick = () => {
 	}
 	TWEEN.update();
 
-	if ((control.enabled = true)) {
-		control.update();
-	}
+	// if ((control.enabled = true)) {
+	// 	control.update();
+	// }
 
 	if (roomba !== null) {
 		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;

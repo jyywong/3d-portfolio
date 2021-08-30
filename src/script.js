@@ -68,6 +68,10 @@ const gltfLoader = new GLTFLoader();
 const bakedTexture = textureLoader.load('blender/baked2FW.jpg');
 bakedTexture.flipY = false;
 
+const auctionHouseScreen = textureLoader.load('pictures/aHTexture.png');
+const inventoryManagementScreen = textureLoader.load('pictures/iMSTexture.png');
+const tripPlannerScreen = textureLoader.load('pictures/tPTexture.png');
+
 // Materials
 const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
 
@@ -81,31 +85,21 @@ camera.position.set(1, 1, 0.1);
 scene.add(camera);
 
 // Model
+
+const tvGeometry = new THREE.PlaneBufferGeometry(1.4292, 0.9721);
+const tvMaterial = new THREE.MeshBasicMaterial({ map: auctionHouseScreen });
+const tvScreen = new THREE.Mesh(tvGeometry, tvMaterial);
+scene.add(tvScreen);
+
+console.log(tvMaterial.color);
+
 const planeGeometry = new THREE.PlaneBufferGeometry(2.75, 0.5);
 // const planeGeometry = new THREE.PlaneBufferGeometry(0.5 * 5, 2.5 * 5);
-const portfolioButton = textureLoader.load('pictures/portfolioButton.png', (tex) => {
-	let imgRatio = tex.image.width / tex.image.height;
-	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
-	tex.wrapS = THREE.RepeatWrapping;
-	tex.repeat.x = planeRatio / imgRatio;
-	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
-});
+const portfolioButton = textureLoader.load('pictures/portfolioButton.png');
 
-const githubButton = textureLoader.load('pictures/githubButton.png', (tex) => {
-	let imgRatio = tex.image.width / tex.image.height;
-	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
-	tex.wrapS = THREE.RepeatWrapping;
-	tex.repeat.x = planeRatio / imgRatio;
-	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
-});
+const githubButton = textureLoader.load('pictures/githubButton.png');
 
-const exploreButton = textureLoader.load('pictures/exploreScene.png', (tex) => {
-	let imgRatio = tex.image.width / tex.image.height;
-	let planeRatio = planeGeometry.parameters.width / planeGeometry.parameters.height;
-	tex.wrapS = THREE.RepeatWrapping;
-	tex.repeat.x = planeRatio / imgRatio;
-	tex.offset.x = -0.5 * (planeRatio / imgRatio - 1);
-});
+const exploreButton = textureLoader.load('pictures/exploreScene.png');
 
 const planeMaterialPort = new THREE.MeshBasicMaterial({ map: portfolioButton });
 
@@ -148,7 +142,7 @@ let textbooksAnimating = false;
 
 let roomba = null;
 
-gltfLoader.load('blender/portfolioOptimized2text.glb', (gltf) => {
+gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
 		// console.log(child);
 		if (![ 'reactLogo', 'reduxLogo', 'djangoLogo', 'jestLogo' ].includes(child.name)) {
@@ -165,22 +159,23 @@ gltfLoader.load('blender/portfolioOptimized2text.glb', (gltf) => {
 	textbooks = gltf.scene.children.find((child) => child.name === 'textbooks');
 	roomba = gltf.scene.children.find((child) => child.name === 'roomba');
 	// pointLight.position.set(lamp.position);
-
+	tvScreen.position.set(tv.position.x, tv.position.y, tv.position.z);
+	tvScreen.position.z += 0.01;
 	// Position to look at hMonitor
 	// x: -1.5427103804282107
 	// y: 1.2007012737959566
 	// z: -0.28940390033229746
 
-	camera.position.x = -1.582;
-	camera.position.y = 1.149;
-	camera.position.z = -0.3;
+	// camera.position.x = -1.582;
+	// camera.position.y = 1.149;
+	// camera.position.z = -0.3;
 
-	// camera.position.x = 3;
-	// camera.position.y = 3;
-	// camera.position.z = 3;
+	camera.position.x = 3;
+	camera.position.y = 3;
+	camera.position.z = 3;
 
-	camera.lookAt(hMonitor.position);
-	// camera.lookAt(new THREE.Vector3());
+	// camera.lookAt(hMonitor.position);
+	camera.lookAt(new THREE.Vector3());
 
 	console.log(camera.rotation);
 
@@ -198,9 +193,9 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor('#000133');
 
-// const control = new OrbitControls(camera, renderer.domElement);
-// control.enableDamping = true;
-// control.enabled = false;
+const control = new OrbitControls(camera, renderer.domElement);
+control.enableDamping = true;
+control.enabled = false;
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -383,13 +378,16 @@ const tick = () => {
 		if (intersects.length && intersects[0].object === displayBenchBoxes) {
 			if (currentIntersect === null && displayBenchBoxesAnimating === false) {
 				moveBoxesOut(displayBenchBoxes);
+				tvScreen.material.map = inventoryManagementScreen;
 			}
 			currentIntersect = intersects[0];
 		} else if (intersects.length && globe.includes(intersects[0].object)) {
 			rotateGlobe(globe, elapsedTime);
+			tvScreen.material.map = tripPlannerScreen;
 		} else if (intersects.length && textbooks.children.includes(intersects[0].object)) {
 			if (currentIntersect === null) {
 				scaleTextbookOut(textbooks);
+				tvScreen.material.map = auctionHouseScreen;
 			}
 			currentIntersect = intersects[0];
 		} else {
@@ -403,9 +401,9 @@ const tick = () => {
 	}
 	TWEEN.update();
 
-	// if ((control.enabled = true)) {
-	// 	control.update();
-	// }
+	if ((control.enabled = true)) {
+		control.update();
+	}
 
 	if (roomba !== null) {
 		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;

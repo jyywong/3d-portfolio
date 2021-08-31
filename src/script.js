@@ -35,6 +35,7 @@ browser.appendChild(picture);
 
 // DEBUG
 const gui = new dat.GUI({ width: 800 });
+gui.hide();
 const debugObject = {
 	cameraX: -1.31,
 	cameraY: 1.241,
@@ -60,10 +61,32 @@ const scene = new THREE.Scene();
 const axesHelper = new THREE.AxesHelper(3);
 scene.add(axesHelper);
 
-// Loaders
-const textureLoader = new THREE.TextureLoader();
+// LoadingManager
+const loadingScreen = document.querySelector('.loadingScreen');
+loadingScreen.addEventListener('transitionend', (event) => {
+	if (event.propertyName === 'opacity') {
+		loadingScreen.remove();
+	}
+});
+const loadingProgress = document.querySelector('.loadingProgress');
+const loadingManager = new THREE.LoadingManager(
+	// Loaded
+	() => {
+		console.log('hello');
+		setTimeout(() => {
+			loadingScreen.style.opacity = '0';
+		}, 1000);
+	},
+	// Progress
+	(itemUrl, itemsLoaded, itemsTotal) => {
+		const progressRatio = itemsLoaded / itemsTotal;
+		loadingProgress.style.transform = `scaleX(${progressRatio})`;
+	}
+);
 
-const gltfLoader = new GLTFLoader();
+// Loaders
+const textureLoader = new THREE.TextureLoader(loadingManager);
+const gltfLoader = new GLTFLoader(loadingManager);
 
 // Textures
 const bakedTexture = textureLoader.load('blender/baked2FW.jpg');

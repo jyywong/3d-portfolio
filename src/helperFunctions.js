@@ -179,14 +179,17 @@ const midShelfSubtitle =
 	"I've also picked up a couple of frameworks/technologies along the way, the main one being React.";
 
 const displayBenchSubtitle =
-	"And with the skills and technologies I've picked up, I've tried my hand at a couple of projects.";
-
+	"And with the skills and technologies I've picked up, I've tried my hand at a couple of projects. (HINT: Hover objects on bench)";
+const centerSubtitle = "I'm always looking for opportunies to grow and develop myself as a developer.";
+const linkSubtitle = 'I look forward to getting to know you!';
 export let subtitleTimeline = [
 	helloSubtitle,
 	zoomOutMonitorSubtitle,
 	topShelfSubtitle,
 	midShelfSubtitle,
-	displayBenchSubtitle
+	displayBenchSubtitle,
+	centerSubtitle,
+	linkSubtitle
 ];
 
 export const rotateSceneToBottom = (scene, camera, origin) => {

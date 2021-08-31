@@ -59,7 +59,7 @@ body {
 
 	background-color: rgba(147, 135, 88, 1);
 }
-.browserTop {
+/* .browserTop {
 	box-sizing: border-box;
 	flex-basis: 5%;
 	width: 100%;
@@ -98,7 +98,7 @@ body {
 	font-size: 150px;
 	padding: 10px;
 	text-align: center;
-}
+} */
 
 .subtitle {
 	border-radius: 10px;
@@ -141,6 +141,7 @@ body {
 .leftArrow {
 	transition: all .5s;
 	cursor: pointer;
+	visibility: hidden;
 }
 .leftArrow:hover {
 	transform: scale(1.3);

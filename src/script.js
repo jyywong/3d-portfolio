@@ -18,7 +18,9 @@ import {
 	subtitleTimeline,
 	rotateSceneToBottom,
 	hoverAnimation,
-	centerPosition
+	centerPosition,
+	startingPosition,
+	reverseRotateSceneToBottom
 } from './helperFunctions';
 
 // Picture
@@ -169,14 +171,12 @@ gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 	tvScreen.position.z += 0.01;
 	entireScene.add(tvScreen);
 
-	console.log('vmonitor', vMonitor.rotation);
 	vMonScreen.position.set(vMonitor.position.x, vMonitor.position.y, vMonitor.position.z);
 	vMonScreen.position.z += 0.001;
 	vMonScreen.position.x += 0.004;
 
 	vMonScreen.rotation.set(vMonitor.rotation.x, vMonitor.rotation.y + Math.PI / 2, vMonitor.rotation.z);
 	entireScene.add(vMonScreen);
-	console.log('vmonScreen', vMonScreen.rotation);
 
 	camera.position.x = -1.582;
 	camera.position.y = 1.149;
@@ -188,8 +188,6 @@ gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 
 	camera.lookAt(hMonitor.position);
 	// camera.lookAt(new THREE.Vector3());
-
-	console.log(camera.rotation);
 
 	// camera.lookAt(shelfBooks.position);
 	// control.target = hMonitor.position;
@@ -227,13 +225,19 @@ window.addEventListener('resize', () => {
 let picHasDisappeared = false;
 let nextPosition = 0;
 let subtitlePosition = 0;
-window.addEventListener('dblclick', () => {
-	// camera.lookAt(shelfV.position);
-	// camera.rotation.y = Math.PI / 2;
-	const subtitle = document.querySelector('.subtitle');
+
+const rightArrow = document.querySelector('.rightArrow');
+const leftArrow = document.querySelector('.leftArrow');
+const subtitle = document.querySelector('.subtitle');
+const timeline = [ 'hello', 'helloZoomOut', 'vMonitor', 'topShelf', 'midShelf', 'display', 'center', 'links' ];
+let timelinePosition = 0;
+
+console.log(rightArrow);
+rightArrow.addEventListener('click', () => {
 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
 	subtitle.style.visibility = 'visible';
 	if (nextPosition === cameraPositions.length) {
+		rightArrow.style.visibility = 'hidden';
 		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
 	} else if (picZoomout === false) {
 		picture.style.transform = 'scale(0.8)';
@@ -244,8 +248,7 @@ window.addEventListener('dblclick', () => {
 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 		nextPosition += 1;
 		picDisappear = true;
-	} else {
-		console.log(nextPosition);
+	} else if (nextPosition < cameraPositions.length) {
 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 		nextPosition += 1;
 	}
@@ -253,10 +256,70 @@ window.addEventListener('dblclick', () => {
 	// if (nextPosition === cameraPositions.length) {
 	// 	control.enabled = true;
 	// }
-
-	subtitlePosition += 1;
-	console.log(displayBenchBoxes.position.z);
+	if (timelinePosition < timeline.length - 1) {
+		subtitlePosition += 1;
+		timelinePosition += 1;
+	}
 });
+leftArrow.addEventListener('click', () => {
+	if (timeline[timelinePosition] === 'helloZoomOut') {
+		picture.style.transform = 'scale(1)';
+		subtitle.style.visibility = 'hidden';
+		picZoomout = false;
+	} else if (timeline[timelinePosition] === 'vMonitor') {
+		moveCameraToNextPosition(camera, startingPosition);
+		nextPosition -= 1;
+		setTimeout(() => {
+			picture.style.opacity = 1;
+			picture.style.transform = 'scaleY(0.8) scaleX(0.8)';
+			picDisappear = false;
+		}, 1000);
+	} else if (timeline[timelinePosition] === 'links') {
+		reverseRotateSceneToBottom(entireScene, camera, new THREE.Vector3());
+		rightArrow.style.visibility = 'visible';
+	} else {
+		console.log('nextPosition', nextPosition);
+		nextPosition -= 2;
+		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+		nextPosition += 1;
+	}
+	subtitlePosition -= 2;
+	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+	subtitlePosition += 1;
+	timelinePosition -= 1;
+	console.log(subtitlePosition);
+});
+
+// window.addEventListener('dblclick', () => {
+// 	// camera.lookAt(shelfV.position);
+// 	// camera.rotation.y = Math.PI / 2;
+// 	const subtitle = document.querySelector('.subtitle');
+// 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+// 	subtitle.style.visibility = 'visible';
+// 	if (nextPosition === cameraPositions.length) {
+// 		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
+// 	} else if (picZoomout === false) {
+// 		picture.style.transform = 'scale(0.8)';
+// 		picZoomout = true;
+// 	} else if (picDisappear === false) {
+// 		picture.style.opacity = 0;
+// 		picture.style.transform = 'scaleY(0) scaleX(0.2)';
+// 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+// 		nextPosition += 1;
+// 		picDisappear = true;
+// 	} else {
+// 		console.log(nextPosition);
+// 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
+// 		nextPosition += 1;
+// 	}
+
+// 	// if (nextPosition === cameraPositions.length) {
+// 	// 	control.enabled = true;
+// 	// }
+
+// 	subtitlePosition += 1;
+// 	console.log(displayBenchBoxes.position.z);
+// });
 
 // Handle mouse
 const mouse = new THREE.Vector2();

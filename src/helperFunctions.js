@@ -1,5 +1,14 @@
 import * as TWEEN from '@tweenjs/tween.js';
 
+export const startingPosition = {
+	newX: -1.582,
+	newY: 1.149,
+	newZ: -0.3,
+	newRX: -3.0359271476618606,
+	newRY: 1.3585975178345049,
+	newRZ: 3.038280185823042
+};
+
 export const centerPosition = {
 	newX: 3,
 	newY: 3,
@@ -216,6 +225,45 @@ export const rotateSceneToBottom = (scene, camera, origin) => {
 	rotateY.start();
 	cameraMove.start();
 	rotateX.chain(zoomIn).start();
+};
+
+export const reverseRotateSceneToBottom = (scene, camera, origin) => {
+	const sceneRotation = { x: scene.rotation.x, y: scene.rotation.y };
+	const camZoom = { zoom: camera.zoom };
+	const camPos = { x: camera.position.x };
+	const newRX = 0;
+	const newRY = 0;
+	const newZoomX = 1;
+	const rotateX = new TWEEN.Tween(sceneRotation)
+		.to({ x: newRX }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.x = sceneRotation.x;
+		});
+	const rotateY = new TWEEN.Tween(sceneRotation)
+		.to({ y: newRY }, 2000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			scene.rotation.y = sceneRotation.y;
+		});
+	const cameraMove = new TWEEN.Tween(camPos).to({ x: 3 }, 1000).onUpdate(() => {
+		camera.position.x = camPos.x;
+		camera.lookAt(origin);
+	});
+	const zoomOut = new TWEEN.Tween(camZoom)
+		.to({ zoom: newZoomX }, 1000)
+		.easing(TWEEN.Easing.Quadratic.Out)
+		.onUpdate(() => {
+			camera.zoom = camZoom.zoom;
+			camera.updateProjectionMatrix();
+			console.log(camZoom.zoom);
+			console.log(camera.zoom);
+		});
+
+	// rotateY.start();
+	// cameraMove.start();
+	// rotateX.chain(zoomIn).start();
+	zoomOut.chain(rotateY, rotateX, cameraMove).start();
 };
 
 export const hoverAnimation = (plane, newY) => {

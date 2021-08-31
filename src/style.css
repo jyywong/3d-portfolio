@@ -129,4 +129,19 @@ body {
 	color: gray;
 	display: flex;
 	justify-content: space-between;
+	z-index: 500;
+}
+.rightArrow {
+	transition: all .5s;
+	cursor: pointer;
+}
+.rightArrow:hover {
+	transform: scale(1.3);
+}
+.leftArrow {
+	transition: all .5s;
+	cursor: pointer;
+}
+.leftArrow:hover {
+	transform: scale(1.3);
 }

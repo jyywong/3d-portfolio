@@ -82,6 +82,11 @@ const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
 camera.position.set(1, 1, 0.1);
 
+const camera2 = new THREE.PerspectiveCamera(75, sizes.width / sizes.height);
+camera2.position.set(3, 3, 3);
+scene.add(camera2);
+
+let cameraUsed = camera;
 // camera.lookAt(new THREE.Vector3());
 
 scene.add(camera);
@@ -203,9 +208,8 @@ renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor('#000133');
 
-// const control = new OrbitControls(camera, renderer.domElement);
-// control.enableDamping = true;
-// control.enabled = false;
+const control = new OrbitControls(camera2, renderer.domElement);
+control.enableDamping = true;
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -215,6 +219,8 @@ window.addEventListener('resize', () => {
 	// Update camera
 	camera.aspect = sizes.width / sizes.height;
 	camera.updateProjectionMatrix();
+	camera2.aspect = sizes.width / sizes.height;
+	camera2.updateProjectionMatrix();
 
 	// Update renderer
 	renderer.setSize(sizes.width, sizes.height);
@@ -232,10 +238,12 @@ const subtitle = document.querySelector('.subtitle');
 const timeline = [ 'hello', 'helloZoomOut', 'vMonitor', 'topShelf', 'midShelf', 'display', 'center', 'links' ];
 let timelinePosition = 0;
 
-console.log(rightArrow);
 rightArrow.addEventListener('click', () => {
 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
 	subtitle.style.visibility = 'visible';
+	if (timeline[timelinePosition] === 'hello') {
+		leftArrow.style.visibility = 'visible';
+	}
 	if (nextPosition === cameraPositions.length) {
 		rightArrow.style.visibility = 'hidden';
 		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
@@ -260,8 +268,13 @@ rightArrow.addEventListener('click', () => {
 		subtitlePosition += 1;
 		timelinePosition += 1;
 	}
+	console.log(subtitlePosition);
 });
 leftArrow.addEventListener('click', () => {
+	console.log(timeline[timelinePosition]);
+	if (timeline[timelinePosition] === 'helloZoomOut') {
+		leftArrow.style.visibility = 'hidden';
+	}
 	if (timeline[timelinePosition] === 'helloZoomOut') {
 		picture.style.transform = 'scale(1)';
 		subtitle.style.visibility = 'hidden';
@@ -277,49 +290,32 @@ leftArrow.addEventListener('click', () => {
 	} else if (timeline[timelinePosition] === 'links') {
 		reverseRotateSceneToBottom(entireScene, camera, new THREE.Vector3());
 		rightArrow.style.visibility = 'visible';
-	} else {
-		console.log('nextPosition', nextPosition);
+	} else if (nextPosition > 1) {
 		nextPosition -= 2;
 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 		nextPosition += 1;
 	}
-	subtitlePosition -= 2;
-	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
-	subtitlePosition += 1;
-	timelinePosition -= 1;
-	console.log(subtitlePosition);
+	if (timelinePosition > 0) {
+		subtitlePosition -= 2;
+		subtitle.innerHTML = subtitleTimeline[subtitlePosition];
+		subtitlePosition += 1;
+		timelinePosition -= 1;
+		console.log(subtitlePosition);
+	}
 });
 
-// window.addEventListener('dblclick', () => {
-// 	// camera.lookAt(shelfV.position);
-// 	// camera.rotation.y = Math.PI / 2;
-// 	const subtitle = document.querySelector('.subtitle');
-// 	subtitle.innerHTML = subtitleTimeline[subtitlePosition];
-// 	subtitle.style.visibility = 'visible';
-// 	if (nextPosition === cameraPositions.length) {
-// 		rotateSceneToBottom(entireScene, camera, new THREE.Vector3());
-// 	} else if (picZoomout === false) {
-// 		picture.style.transform = 'scale(0.8)';
-// 		picZoomout = true;
-// 	} else if (picDisappear === false) {
-// 		picture.style.opacity = 0;
-// 		picture.style.transform = 'scaleY(0) scaleX(0.2)';
-// 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
-// 		nextPosition += 1;
-// 		picDisappear = true;
-// 	} else {
-// 		console.log(nextPosition);
-// 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
-// 		nextPosition += 1;
-// 	}
-
-// 	// if (nextPosition === cameraPositions.length) {
-// 	// 	control.enabled = true;
-// 	// }
-
-// 	subtitlePosition += 1;
-// 	console.log(displayBenchBoxes.position.z);
-// });
+window.addEventListener('click', () => {
+	if (currentIntersect && currentIntersect.object === plane3) {
+		document.querySelector('.welcomeScreen').remove();
+		subtitle.remove();
+		reverseRotateSceneToBottom(entireScene, camera, new THREE.Vector3());
+		setTimeout(() => {
+			cameraUsed = camera2;
+		}, 2000);
+	} else if (currentIntersect && currentIntersect.object === plane2) {
+		window.open('https://github.com/jyywong');
+	}
+});
 
 // Handle mouse
 const mouse = new THREE.Vector2();
@@ -467,27 +463,41 @@ const tick = () => {
 				tvScreen.material.map = auctionHouseScreen;
 			}
 			currentIntersect = intersects[0];
+		} else if (intersects.length && intersects[0].object === plane1) {
+			if (currentIntersect === null) {
+				hoverAnimation(plane1, -0.5);
+			}
+			currentIntersect = intersects[0];
+		} else if (intersects.length && intersects[0].object === plane2) {
+			if (currentIntersect === null) {
+				hoverAnimation(plane2, -0.5);
+			}
+			currentIntersect = intersects[0];
+		} else if (intersects.length && intersects[0].object === plane3) {
+			if (currentIntersect === null) {
+				hoverAnimation(plane3, -0.5);
+			}
+			currentIntersect = intersects[0];
 		} else {
 			if (currentIntersect) {
 				moveBoxesIn(displayBenchBoxes);
 				scaleTextbookIn(textbooks);
+				hoverAnimation(plane1, -0.01);
+				hoverAnimation(plane2, -0.01);
+				hoverAnimation(plane3, -0.01);
 			}
 
 			currentIntersect = null;
 		}
 	}
 	TWEEN.update();
-
-	// if ((control.enabled = true)) {
-	// 	control.update();
-	// }
+	control.update();
 
 	if (roomba !== null) {
 		roomba.position.x = (roombaP.position.x / 800 - 0.5) * 4;
 		roomba.position.z = (roombaP.position.y / 800 - 0.5) * 4;
 	}
-
-	renderer.render(scene, camera);
+	renderer.render(scene, cameraUsed);
 	window.requestAnimationFrame(tick);
 };
 

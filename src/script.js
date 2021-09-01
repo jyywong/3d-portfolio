@@ -22,10 +22,6 @@ import {
 	reverseRotateSceneToBottom
 } from './helperFunctions';
 
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
-
 // Picture
 let picZoomout = false;
 let picDisappear = false;
@@ -73,7 +69,6 @@ const loadingProgress = document.querySelector('.loadingProgress');
 const loadingManager = new THREE.LoadingManager(
 	// Loaded
 	() => {
-		console.log('hello');
 		setTimeout(() => {
 			loadingScreen.style.opacity = '0';
 		}, 1000);
@@ -126,8 +121,6 @@ const vMonMaterial = new THREE.MeshBasicMaterial({ map: vMonitor });
 const vMonScreen = new THREE.Mesh(vMonGeometry, vMonMaterial);
 scene.add(vMonScreen);
 
-console.log(tvMaterial.color);
-
 const planeGeometry = new THREE.PlaneBufferGeometry(2.75, 0.5);
 const portfolioButton = textureLoader.load('pictures/portfolioButton.png');
 
@@ -179,7 +172,6 @@ gltfLoader.load('blender/portfolioOptimizedMerged.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
 		if (![ 'reactLogo', 'reduxLogo', 'djangoLogo', 'jestLogo' ].includes(child.name)) {
 			child.material = bakedMaterial;
-			console.log(child);
 		}
 	});
 
@@ -278,10 +270,8 @@ rightArrow.addEventListener('click', () => {
 		subtitlePosition += 1;
 		timelinePosition += 1;
 	}
-	console.log(subtitlePosition);
 });
 leftArrow.addEventListener('click', () => {
-	console.log(timeline[timelinePosition]);
 	if (timeline[timelinePosition] === 'helloZoomOut') {
 		leftArrow.style.visibility = 'hidden';
 	}
@@ -310,7 +300,6 @@ leftArrow.addEventListener('click', () => {
 		subtitle.innerHTML = subtitleTimeline[subtitlePosition];
 		subtitlePosition += 1;
 		timelinePosition -= 1;
-		console.log(subtitlePosition);
 	}
 });
 
@@ -374,7 +363,6 @@ const benchP = MATTER.Bodies.rectangle(
 const chairP = MATTER.Bodies.circle(convertFromBlenderToMatterUnits(1.14), convertFromBlenderToMatterUnits(1.51), 60, {
 	isStatic: true
 });
-console.log(shelfP.position);
 
 const createRandomVector = () => {
 	const randVector = MATTER.Vector.create(Math.random() - 0.5, Math.random() - 0.5);
@@ -394,13 +382,12 @@ const roombaP = MATTER.Bodies.circle(400, 400, 30);
 roombaP.friction = 0;
 
 MATTER.Composite.add(engine.world, [ roombaP, northWall, eastWall, southWall, westWall, shelfP, benchP, chairP ]);
-MATTER.Render.run(render);
+// MATTER.Render.run(render);
 
 // End phyiscs world
 let oldElapsedTime = 0;
 const clock = new THREE.Clock();
 const tick = () => {
-	stats.begin();
 	const elapsedTime = clock.getElapsedTime();
 	const deltaTime = elapsedTime - oldElapsedTime;
 	oldElapsedTime = elapsedTime;
@@ -482,7 +469,5 @@ const tick = () => {
 	}
 	renderer.render(scene, cameraUsed);
 	window.requestAnimationFrame(tick);
-	stats.end();
 };
-
 tick();

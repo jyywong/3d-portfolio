@@ -221,8 +221,6 @@ export const rotateSceneToBottom = (scene, camera, origin) => {
 		.onUpdate(() => {
 			camera.zoom = camZoom.zoom;
 			camera.updateProjectionMatrix();
-			console.log(camZoom.zoom);
-			console.log(camera.zoom);
 		});
 
 	rotateY.start();
@@ -259,8 +257,6 @@ export const reverseRotateSceneToBottom = (scene, camera, origin) => {
 		.onUpdate(() => {
 			camera.zoom = camZoom.zoom;
 			camera.updateProjectionMatrix();
-			console.log(camZoom.zoom);
-			console.log(camera.zoom);
 		});
 
 	// rotateY.start();

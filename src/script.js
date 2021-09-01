@@ -5,11 +5,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import * as MATTER from 'matter-js';
 import * as dat from 'dat.gui';
+import Stats from 'stats.js';
 
 import {
 	moveCameraToNextPosition,
 	cameraPositions,
-	displayShelf,
 	moveBoxesOut,
 	moveBoxesIn,
 	rotateGlobe,
@@ -18,10 +18,13 @@ import {
 	subtitleTimeline,
 	rotateSceneToBottom,
 	hoverAnimation,
-	centerPosition,
 	startingPosition,
 	reverseRotateSceneToBottom
 } from './helperFunctions';
+
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
 // Picture
 let picZoomout = false;
@@ -56,10 +59,8 @@ const sizes = {
 const raycaster = new THREE.Raycaster();
 let currentIntersect = null;
 
+// Scene
 const scene = new THREE.Scene();
-
-const axesHelper = new THREE.AxesHelper(3);
-scene.add(axesHelper);
 
 // LoadingManager
 const loadingScreen = document.querySelector('.loadingScreen');
@@ -97,6 +98,7 @@ const inventoryManagementScreen = textureLoader.load('pictures/iMSTexture.png');
 const tripPlannerScreen = textureLoader.load('pictures/tPTexture.png');
 
 const vMonitor = textureLoader.load('pictures/webDevReact.png');
+
 // Materials
 const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture });
 
@@ -110,8 +112,6 @@ camera2.position.set(3, 3, 3);
 scene.add(camera2);
 
 let cameraUsed = camera;
-// camera.lookAt(new THREE.Vector3());
-
 scene.add(camera);
 
 // Model
@@ -129,7 +129,6 @@ scene.add(vMonScreen);
 console.log(tvMaterial.color);
 
 const planeGeometry = new THREE.PlaneBufferGeometry(2.75, 0.5);
-// const planeGeometry = new THREE.PlaneBufferGeometry(0.5 * 5, 2.5 * 5);
 const portfolioButton = textureLoader.load('pictures/portfolioButton.png');
 
 const githubButton = textureLoader.load('pictures/githubButton.png');
@@ -173,19 +172,20 @@ let displayBenchBoxesAnimating = false;
 let globe = null;
 
 let textbooks = null;
-let textbooksAnimating = false;
 
 let roomba = null;
 
-gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
+gltfLoader.load('blender/portfolioOptimizedMerged.glb', (gltf) => {
 	gltf.scene.traverse((child) => {
-		// console.log(child);
 		if (![ 'reactLogo', 'reduxLogo', 'djangoLogo', 'jestLogo' ].includes(child.name)) {
 			child.material = bakedMaterial;
+			console.log(child);
 		}
 	});
+
 	gltf.scene.add(plane1, plane2, plane3);
 	entireScene = gltf.scene;
+
 	hMonitor = gltf.scene.children.find((child) => child.name === 'hMonitor');
 	const vMonitor = gltf.scene.children.find((child) => child.name === 'vMonitor');
 	const shelf = gltf.scene.children.find((child) => child.name === 'shelf');
@@ -210,15 +210,7 @@ gltfLoader.load('blender/portfolioOptimizedTV.glb', (gltf) => {
 	camera.position.y = 1.149;
 	camera.position.z = -0.3;
 
-	// camera.position.x = 3;
-	// camera.position.y = 3;
-	// camera.position.z = 3;
-
 	camera.lookAt(hMonitor.position);
-	// camera.lookAt(new THREE.Vector3());
-
-	// camera.lookAt(shelfBooks.position);
-	// control.target = hMonitor.position;
 
 	scene.add(gltf.scene);
 });
@@ -229,7 +221,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor('#000133');
+renderer.setClearColor('#d3d3d3');
 
 const control = new OrbitControls(camera2, renderer.domElement);
 control.enableDamping = true;
@@ -251,7 +243,6 @@ window.addEventListener('resize', () => {
 });
 
 // // Handle user input
-let picHasDisappeared = false;
 let nextPosition = 0;
 let subtitlePosition = 0;
 
@@ -283,10 +274,6 @@ rightArrow.addEventListener('click', () => {
 		moveCameraToNextPosition(camera, cameraPositions[nextPosition]);
 		nextPosition += 1;
 	}
-
-	// if (nextPosition === cameraPositions.length) {
-	// 	control.enabled = true;
-	// }
 	if (timelinePosition < timeline.length - 1) {
 		subtitlePosition += 1;
 		timelinePosition += 1;
@@ -410,24 +397,13 @@ MATTER.Composite.add(engine.world, [ roombaP, northWall, eastWall, southWall, we
 MATTER.Render.run(render);
 
 // End phyiscs world
-
 let oldElapsedTime = 0;
-
 const clock = new THREE.Clock();
 const tick = () => {
+	stats.begin();
 	const elapsedTime = clock.getElapsedTime();
 	const deltaTime = elapsedTime - oldElapsedTime;
 	oldElapsedTime = elapsedTime;
-
-	// camera.position.x = debugObject.cameraX;
-	// camera.position.y = debugObject.cameraY;
-	// camera.position.z = debugObject.cameraZ;
-	// if (vMonScreen !== null) {
-	// 	camera.lookAt(vMonScreen.position);
-	// }
-
-	// console.log(deltaTime);
-
 	//  --------------------------------------------
 	// Physics Calculations
 
@@ -445,7 +421,7 @@ const tick = () => {
 
 	MATTER.Body.setVelocity(roombaP, currentVector);
 
-	MATTER.Engine.update(engine);
+	MATTER.Engine.update(engine, deltaTime);
 	// End Physics Calculations
 	//  --------------------------------------------
 
@@ -454,22 +430,6 @@ const tick = () => {
 		raycaster.setFromCamera(mouse, camera);
 		const objectsToTest = [ displayBenchBoxes, ...globe, ...textbooks.children, plane1, plane2, plane3 ];
 		const intersects = raycaster.intersectObjects(objectsToTest);
-		// console.log(hover);
-
-		// if (intersects.length && currentIntersect === null) {
-		// 	if (intersects[0].object === plane1) {
-		// 		plane1.position.y = -0.5;
-		// 	} else if (intersects[0].object === plane2) {
-		// 		plane2.position.y = -0.5;
-		// 	} else if (intersects[0].object === plane3) {
-		// 		plane3.position.y = -0.5;
-		// 	}
-		// } else {
-		// 	plane1.position.y = -0.01;
-		// 	plane2.position.y = -0.01;
-		// 	plane3.position.y = -0.01;
-		// 	currentIntersect = null;
-		// }
 
 		if (intersects.length && intersects[0].object === displayBenchBoxes) {
 			if (currentIntersect === null && displayBenchBoxesAnimating === false) {
@@ -522,6 +482,7 @@ const tick = () => {
 	}
 	renderer.render(scene, cameraUsed);
 	window.requestAnimationFrame(tick);
+	stats.end();
 };
 
 tick();
